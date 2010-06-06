@@ -1,0 +1,5 @@
+*.pyc
+*~
+conf.yaml
+input_hist.db
+
