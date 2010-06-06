@@ -12,20 +12,13 @@ import History
 CONF_FILENAME="conf.yaml"
 
 def encoding_detect(orig_str):
-  try:
-    return ('iso-2022-jp', orig_str.decode('iso-2022-jp'))
-  except UnicodeDecodeError:
+  for coding in ('iso-2022-jp', 'euc-jp', 'cp932', 'utf-8'):
     try:
-      return ('euc-jp', orig_str.decode('euc-jp'))
+      return (coding, orig_str.decode(coding))
     except UnicodeDecodeError:
-      try:
-	return ('cp932', orig_str.decode('cp932'))
-      except UnicodeDecodeError:
-	try:
-	  return ('utf-8', orig_str.decode('utf-8'))
-	except UnicodeDecodeError:
-	  return (None, None)
-
+      pass
+  return (None, None)
+  
 def create_contents(url, value, insta=True):
   if (insta):
     url = "http://www.instapaper.com/text?u=" + urllib.quote_plus(url)
