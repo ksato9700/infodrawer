@@ -2,6 +2,7 @@
 # -*- coding:utf-8 -*-
 
 import sys, os
+import types
 import yaml
 
 import urllib
@@ -17,7 +18,7 @@ def encoding_detect(orig_str):
       return (coding, orig_str.decode(coding))
     except UnicodeDecodeError:
       pass
-  return (None, None)
+    return (None, None)
   
 def create_contents(url, value, insta=True):
   if (insta):
@@ -36,46 +37,37 @@ def create_contents(url, value, insta=True):
   
   return value
 
-if __name__ == '__main__':
+def find_putters(conf, dirname, base_modname, base_classname):
+  putter_module = __import__(dirname, fromlist=conf[dirname].keys())
+  putter_class = getattr(getattr(putter_module, base_modname), base_classname)
+
+  putters = []
+  for n in conf[dirname]:
+    mod = getattr(putter_module,n) 
+    putters.append(*map(lambda c: (n,c), 
+                        filter(lambda attr: isinstance(attr, type) and issubclass(attr, putter_class), 
+                               map(lambda name: getattr(mod,name), dir(mod)))))
+  return putters
+
+def main():
   f = os.path.abspath(os.path.dirname(__file__)) + "/" + CONF_FILENAME
   conf = yaml.load(open(f).read().decode('utf8'))
 
-  input_dict = {}
+  # hist = History.History()
+
+  # new_dict = {}
+  # for i, inputter in find_putters(conf, 'input', 'inputter', 'Inputter'):
+  #   new_dict.update(hist.merge(inputter(conf['input'][i]).get()))
   
-  for i in conf['input']:
-    input_m = None
-    if (i == "googlereader"):
-      from input import googlereader
-      input_m = googlereader.GoogleReader(conf['input'][i])
-    elif (i == "twitter"):
-      from input import twitter
-      input_m = twitter.Twitter(conf['input'][i])
-    elif (i == "twitterfav"):
-      from input import twitterfav
-      input_m = twitterfav.TwitterFav(conf['input'][i])
-    if input_m:
-      input_dict = input_m.get(input_dict)
+  # for url, value in  new_dict.iteritems():
+  #   new_dict[url] = create_contents(url, value)
 
-  hist = History.History()
-  input_dict = hist.merge(input_dict)
+  # if len(new_dict) < 1:
+  #    print 'nothing to output'
+  #    sys.exit(0)
+    
+  for o, outputters in find_putters(conf, 'output', 'outputters', 'Outputter'):
+    outputter(conf['output'][o]).output(new_dict)
 
-  for url, value in  input_dict.iteritems():
-    input_dict[url] = create_contents(url, value)
-
-  if len(input_dict) > 0:
-    for o in conf['output']:
-      output_m = None
-      if (o == "instapaper"):
-	from output import instapaper
-	output_m = instapaper.InstaPaper(conf['output'][o])
-      elif (o == "mail"):
-	from output import mail
-	output_m = mail.Mail(conf['output'][o])
-      elif (o == "evernote"):
-	from output import evernote
-	output_m = evernote.Evernote(conf['output'][o])
-
-      if output_m:
-	output_m.output(input_dict)
-
-
+if __name__ == '__main__':
+  main()

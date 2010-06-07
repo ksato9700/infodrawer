@@ -1,15 +1,13 @@
 #! /usr/bin/env python
 # -*- coding:utf-8 -*-
 
-import feedparser
-import urllib
-from datetime import datetime
+import inputter
 
-class Twitter():
+class Twitter(inputter.FeedInputter):
   '''
-  TwitterのTimeLine中、任意の keyword が含まれているエントリを取り出す
+  Retrieve entries in Twitter's TimeLine matching the specified keyword
   
-  config.yamlの形式
+  Format of config.yaml
       twitter:
           url: http://twitter.com/statuses/user_timeline/XXXXX.rss
           keyword: "メモ"
@@ -18,62 +16,19 @@ class Twitter():
   >>> conf['url'] = "http://twitter.com/statuses/user_timeline/7080152.rss"
   >>> conf['keyword'] = u"こんにちは"
 
+  >>> from twitter import Twitter
   >>> t = Twitter(conf)
+  >>> result = t.get()
+  >>> print len(result)
+  3
 
-  引数に辞書を渡す。内部の形式は History.py に記載されている。
-  この辞書のなかに url があれば、それはすでに他のモジュールが
-  得ている url であるため、ここではなにもしない。
-
-  返り値も同じ形式の辞書となる。
-  
-  >>> input_dict = {}
-  >>> result = t.get(input_dict)
   '''
-
   def __init__(self, conf):
-    self.input_url = conf['url']
-    if ('keyword' in conf):
-      self.keyword = conf['keyword']
-    else:
-      self.keyword = None
-
-  def get(self, input_dict):
-    try:
-      fdp = feedparser.parse(self.input_url)
-    except:
-      print "(Error) can not get the RSS..."
-      sys.exit(1)
-
-    d_str = datetime.now().isoformat()
-
-    for entry in fdp['entries']:
-      title = ""
-      link = ""
-
-      if ( "title" in entry ):
-	title = entry.title
-
-      if ((self.keyword) and (self.keyword not in title)):
-	continue
-
-      if ( "link" in entry ):
-	link = entry.link
-
-      if (link in input_dict): # already in the list from other input mod(s).
-	continue
-
-      input_dict[link] = {'title':title,
-			  'input_from':'Twitter Memo',
-			  'input_date': d_str,
-			  'tag' : ''}
-      
-      
-    return input_dict
-
+    super(Twitter, self).__init__(conf, 'Twitter Memo')
 
 def _test():
   import doctest
-  doctest.testmod()
+  doctest.testfile('twitter.py', encoding='utf-8')
 
 if __name__ == '__main__':
   _test()
