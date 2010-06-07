@@ -1,42 +1,11 @@
 #! /usr/bin/env python
 # -*- coding:utf-8 -*-
 
-import urllib2
+import outputter
 
-import smtplib
-from email.MIMEText import MIMEText
-from email.MIMEMultipart import MIMEMultipart 
-from email.Header import Header
-from email.Utils import formatdate
-
-class Evernote():
-
+class Evernote(outputter.MailOutputter):
   def __init__(self, conf):
-    self.conf = conf
-    self.from_addr = conf['from_addr']
-    self.to_addr   = conf['mail_addr']
-    if ('smtp' in conf):
-      self.smtp    = conf['smtp']
-    else:
-      self.smtp    = None
-    self.insta = False
-    if ('insta' in conf):
-      self.insta = conf['insta']
-    if ('use_gmail' in conf):
-      if (conf['use_gmail'] == True):
-	self.use_gmail = True
-      else:
-	self.use_gmail = False
-    else:
-      self.use_gmail = False
-    if ('gmail_addr' in conf):
-      self.gmail_addr = conf['gmail_addr']
-    else:
-      self.use_gmail = False
-    if ('gmail_pass' in conf):
-      self.gmail_pass= conf['gmail_pass']
-    else:
-      self.use_gmail = False
+    super(Evernote, self).__init__(conf)
 
     if ('note' in conf):
       self.note      = conf['note']
@@ -47,39 +16,13 @@ class Evernote():
     else:
       self.tag       = None
 
-  def output(self, input_dict):
-    import mail
-    mail_o = mail.Mail(self.conf)
-    for url, value in  input_dict.iteritems():
-      contents = None
-      encoding = ""
-      if ('Twitter' in value['input_from']):
-	encoding = 'utf-8'
-	contents = value['title']
-      else:
-	encoding = value['encoding']
-	contents = value['contents']
 
-      if (contents == None):
-	continue # XXX
-
-      subject = value['title']
-      if (self.note):
-	subject = subject + " @" + self.note
-      if (self.tag):
-	subject = subject + " #"+ self.tag
-      msg = mail_o.create_HTML_message(self.from_addr,
-				self.to_addr,
-				subject,
-				contents,
-				encoding)
-      if (self.use_gmail):
-	mail_o.send_via_gmail(self.from_addr, self.to_addr,
-			      msg, self.gmail_addr, self.gmail_pass)
-      else:
-	mail_o.send_mail(self.from_addr, self.to_addr,
-			 msg, self.smtp)
-
+  def create_HTML_message(self, from_addr, to_addr, subject, html_body, encoding):
+    if 'note' in self.conf:
+      subject += " @" + self.conf['note']
+    if 'tag' in self.conf:
+      subject += " #" + self.conf['tag']
+    return super(Evernote, self).create_HTML_message(from_addr, to_addr, subject, html_body, encoding)
 
 if __name__ == '__main__':
   import sys,os

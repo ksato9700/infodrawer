@@ -55,7 +55,7 @@ def main():
 
   # hist = History.History()
 
-  # new_dict = {}
+  new_dict = {}
   # for i, inputter in find_putters(conf, 'input', 'inputter', 'Inputter'):
   #   new_dict.update(hist.merge(inputter(conf['input'][i]).get()))
   
@@ -66,7 +66,7 @@ def main():
   #    print 'nothing to output'
   #    sys.exit(0)
     
-  for o, outputters in find_putters(conf, 'output', 'outputters', 'Outputter'):
+  for o, outputter in find_putters(conf, 'output', 'outputter', 'Outputter'):
     outputter(conf['output'][o]).output(new_dict)
 
 if __name__ == '__main__':
